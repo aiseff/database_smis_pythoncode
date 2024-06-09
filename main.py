@@ -77,7 +77,6 @@ def product():
         cursor.execute("SELECT * FROM product")
         rows = cursor.fetchall()
 
-
 #Sorting
     def sort_by_id():
         try:
@@ -247,10 +246,6 @@ def product():
                 entry_name.insert(0, item_values[1])
                 entry_price1.delete(0, tk.END)
                 entry_price1.insert(0, item_values[2])
-                # entry_remain.delete(0, tk.END)
-                # entry_remain.insert(0, item_values[3])
-                # entry_sold.delete(0, tk.END)
-                # entry_sold.insert(0, item_values[4])
         tree.bind("<Double-1>", on_double_click)
 
         #Delete confirmation
@@ -292,42 +287,28 @@ def product():
         frame_id.pack(anchor="nw")
         label_id = tk.Label(frame_id, text="Enter id:", width=10, height=1, background="#FFFFFF", anchor='nw')
         label_id.pack(side="left")
-        entry_id=tk.Entry(frame_id, width=56)
+        entry_id=tk.Entry(frame_id, width=84)
         entry_id.pack(side="left")
 
         frame_name = tk.Frame(root)
         frame_name.pack(anchor="nw")
         label_name = tk.Label(frame_name, text="Enter name:", width=10, height=1, background="#FFFFFF", anchor='nw')
         label_name.pack(side="left")
-        entry_name=tk.Entry(frame_name, width=56)
+        entry_name=tk.Entry(frame_name, width=84)
         entry_name.pack(side="left")
 
         frame_price1 = tk.Frame(root)
         frame_price1.pack(anchor="nw")
         label_price1 = tk.Label(frame_price1, text="Enter price:", width=10, height=1, background="#FFFFFF", anchor='nw')
         label_price1.pack(side="left")
-        entry_price1 = tk.Entry(frame_price1, width=56)
+        entry_price1 = tk.Entry(frame_price1, width=84)
         entry_price1.pack(side="left")
-
-        # frame_remain = tk.Frame(root)
-        # frame_remain.pack(anchor="nw")
-        # label_remain = tk.Label(frame_remain, text="Enter remain:", width=10, height=1, background="#FFFFFF", anchor='nw')
-        # label_remain.pack(side="left")
-        # entry_remain = tk.Entry(frame_remain, width=56)
-        # entry_remain.pack(side="left")
-        #
-        # frame_sold = tk.Frame(root)
-        # frame_sold.pack(anchor="nw")
-        # label_sold = tk.Label(frame_sold, text="Enter sold:", width=10, height=1, background="#FFFFFF", anchor='nw')
-        # label_sold.pack(side="left")
-        # entry_sold = tk.Entry(frame_sold, width=56)
-        # entry_sold.pack(side="left")
 
         frame_sort = tk.Frame(root)
         frame_sort.pack(anchor="nw")
         label_sort = tk.Label(frame_sort, text="Id to find:", width=10, height=2, background="#C0C0C0", anchor='nw')
         label_sort.pack(side="left")
-        entry_sort = tk.Entry(frame_sort, width=56)
+        entry_sort = tk.Entry(frame_sort, width=84)
         entry_sort.pack(side="left")
 
     except Exception as e:
@@ -431,11 +412,71 @@ def arrival():
                 result_tree.insert("", "end", text=str(i), values=row)
             result_tree.pack()
 
+            def save_to_excel(selected_product_id):
+                cursor.execute("SELECT * FROM arrival WHERE product_id=%s", (selected_product_id,))
+                rows = cursor.fetchall()
+                wb = Workbook()
+                ws = wb.active
+                ws.append(
+                    ['Arrival id', 'Product id', 'Arrival date', 'Arrival amount', 'Arrival weight', 'Arrival price'])
+                for row in rows:
+                    ws.append(row)
+                desktop_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                save_path = os.path.join(desktop_path, f"product_data_{timestamp}.xlsx")
+
+                wb.save(save_path)
+                print(f"The data has been successfully saved in the file {save_path} on the desktop.")
+
+            # Создание кнопки "Save"
+            button_save = tk.Button(result_window, text='Save', width=10, height=1,
+                                    command=lambda: save_to_excel(selected_product_id))
+            button_save.pack()
+
+        except ValueError as e:
+            print(f"Error: {e}. Enter correct product id")
+
+        # Sorting
+    def sort_by_date():
+        try:
+            selected_product_id = entry_sort_date.get()
+            # Создаем новое окно для отображения сортированных данных
+            result_window = tk.Toplevel(root)
+            result_window.title("Sorted by product id")
+            result_window.resizable(False, False)
+            result_window.configure(bg='#FFFFFF')
+
+            result_tree = ttk.Treeview(result_window)
+            result_tree["columns"] = (
+                'Arrival id', 'Product id', 'Arrival date', 'Arrival amount', 'Arrival weight', 'Arrival price')
+            result_tree.heading('#0', text='№')
+            result_tree.heading('Arrival id', text='Arrival id')
+            result_tree.heading('Product id', text='Product id')
+            result_tree.heading('Arrival date', text='Arrival date')
+            result_tree.heading('Arrival amount', text='Arrival amount')
+            result_tree.heading('Arrival weight', text='Arrival weight')
+            result_tree.heading('Arrival price', text='Arrival price')
+
+            # Устанавливаем размеры столбцов для таблицы результатов
+            result_tree.column("#0", width=40)
+            result_tree.column("Arrival id", width=100, anchor=tk.CENTER)
+            result_tree.column("Product id", width=220, anchor=tk.CENTER)
+            result_tree.column("Arrival date", width=100, anchor=tk.CENTER)
+            result_tree.column("Arrival amount", width=100, anchor=tk.CENTER)
+            result_tree.column("Arrival weight", width=100, anchor=tk.CENTER)
+            result_tree.column("Arrival price", width=100, anchor=tk.CENTER)
+
+            cursor.execute("SELECT * FROM arrival WHERE arrival_date=%s", (selected_product_id,))
+            rows = cursor.fetchall()
+            for i, row in enumerate(rows):
+                result_tree.insert("", "end", text=str(i), values=row)
+            result_tree.pack()
+
         except ValueError as e:
             print(f"Error: {e}. Enter correct product id")
 
         def save_to_excel(selected_product_id):
-            cursor.execute("SELECT * FROM arrival WHERE product_id=%s", (selected_product_id,))
+            cursor.execute("SELECT * FROM arrival WHERE arrival_date=%s", (selected_product_id,))
             rows = cursor.fetchall()
             wb = Workbook()
             ws = wb.active
@@ -677,6 +718,9 @@ def arrival():
         button_excel = tk.Button(button_frame_right, text="Save to excel", padx=5, pady=1, width=10, height=1, command=save_to_excel)
         button_excel.pack(side=tk.TOP)
 
+        button_sort = tk.Button(button_frame_right, bg="#C0C0C0", text="Sort by date", padx=5, pady=1, width=10, height=1,command=sort_by_date)
+        button_sort.pack(side=tk.TOP)
+
         button_frame_left = tk.Frame(root, background="#FFFFFF")
         button_frame_left.pack(side='right')
         # Add String
@@ -689,7 +733,7 @@ def arrival():
         button_delete = tk.Button(button_frame_left, text="Delete String", padx=5, pady=1, width=10, height=1, command= confirm_action)
         button_delete.pack(side=tk.TOP)
 
-        button_sort = tk.Button(button_frame_left, bg="#C0C0C0", text="Sort", padx=5, pady=1, width=10, height=1, command=sort_by_id)
+        button_sort = tk.Button(button_frame_left, bg="#C0C0C0", text="Sort by id", padx=5, pady=1, width=10, height=1, command=sort_by_id)
         button_sort.pack(side=tk.TOP)
 
         frame_id1 = tk.Frame(root)
@@ -741,6 +785,12 @@ def arrival():
         entry_sort = tk.Entry(frame_sort, width=50)
         entry_sort.pack(side="left")
 
+        frame_sort_date = tk.Frame(root)
+        frame_sort_date.pack(anchor="nw")
+        label_sort_date = tk.Label(frame_sort_date, text="Date to find:", width=13, height=1, background="#C0C0C0",anchor='nw')
+        label_sort_date.pack(side="left")
+        entry_sort_date = tk.Entry(frame_sort_date, width=50)
+        entry_sort_date.pack(side="left")
 
     except Exception as e:
         print(f"Error loading data {e}")
@@ -1002,7 +1052,7 @@ def client():
         button_delete = tk.Button(button_frame_left, text="Delete String", padx=5, pady=1, width=10, height=1, command= confirm_action)
         button_delete.pack(side=tk.TOP)
 
-        button_sort = tk.Button(button_frame_left,bg="#C0C0C0", text="Sort", padx=5, pady=1, width=10, height=1, command=sort_by_id)
+        button_sort = tk.Button(button_frame_left,bg="#C0C0C0", text="Sort by name", padx=5, pady=1, width=10, height=1, command=sort_by_id)
         button_sort.pack(side=tk.TOP)
 
         frame_id2 = tk.Frame(root)
@@ -1035,8 +1085,7 @@ def client():
 
         frame_sort = tk.Frame(root)
         frame_sort.pack(anchor="nw")
-        label_sort = tk.Label(frame_sort, text="Name to find:", width=14, height=1, background="#C0C0C0",
-                              anchor='nw')
+        label_sort = tk.Label(frame_sort, text="Name to find:", width=14, height=1, background="#C0C0C0",anchor='nw')
         label_sort.pack(side="left")
         entry_sort = tk.Entry(frame_sort, width=38)
         entry_sort.pack(side="left")
@@ -1300,7 +1349,7 @@ def order():
         button_delete = tk.Button(button_frame_left, text="Delete String", padx=5, pady=1, width=10, height=1, command= confirm_action)
         button_delete.pack(side=tk.TOP)
 
-        button_sort = tk.Button(button_frame_left,bg="#C0C0C0", text="Sort", padx=5, pady=1, width=10, height=1, command=sort_by_id)
+        button_sort = tk.Button(button_frame_left,bg="#C0C0C0", text="Sort by id", padx=5, pady=1, width=10, height=1, command=sort_by_id)
         button_sort.pack(side=tk.TOP)
 
         frame_id3 = tk.Frame(root)
@@ -1345,7 +1394,6 @@ def order():
     # Не трогать
     # Закрытие соединения с базой данных
     root.mainloop()
-
 
 def payment():
 
@@ -1401,7 +1449,7 @@ def payment():
         cursor.execute("SELECT * FROM payment")
         rows = cursor.fetchall()
 
-    # Sorting
+    # Sorting by id
     def sort_by_id():
         try:
             selected_product_id = int(entry_sort.get())
@@ -1427,9 +1475,67 @@ def payment():
             result_tree.column("Order id", width=100, anchor=tk.CENTER)
             result_tree.column("Payment date", width=100, anchor=tk.CENTER)
             result_tree.column("Payment price", width=100, anchor=tk.CENTER)
-            result_tree.column("Payment price", width=100, anchor=tk.CENTER)
+            result_tree.column("Product id", width=80, anchor=tk.CENTER)
 
             cursor.execute("SELECT * FROM payment WHERE order_id=%s", (selected_product_id,))
+            rows = cursor.fetchall()
+            for i, row in enumerate(rows):
+                result_tree.insert("", "end", text=str(i), values=row)
+            result_tree.pack()
+
+            def save_to_excel(selected_product_id):
+                cursor.execute("SELECT * FROM payment WHERE order_id=%s", (selected_product_id,))
+                rows = cursor.fetchall()
+                wb = Workbook()
+                ws = wb.active
+                ws.append(
+                    ['Payment id', 'Order id', 'Payment date', 'Payment price'])
+                for row in rows:
+                    ws.append(row)
+                desktop_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                save_path = os.path.join(desktop_path, f"product_data_{timestamp}.xlsx")
+
+                wb.save(save_path)
+                print(f"The data has been successfully saved in the file {save_path} on the desktop.")
+
+            # Создание кнопки "Save"
+            button_save = tk.Button(result_window, text='Save', width=10, height=1,
+                                    command=lambda: save_to_excel(selected_product_id))
+            button_save.pack()
+
+        except ValueError as e:
+            print(f"Error: {e}. Enter correct product id")
+
+    # Sorting by date
+    def sort_by_date():
+        try:
+            selected_product_id = str(entry_sort_date.get())
+            # Создаем новое окно для отображения сортированных данных
+            result_window = tk.Toplevel(root)
+            result_window.title("Sorted by product id")
+            result_window.resizable(False, False)
+            result_window.configure(bg='#FFFFFF')
+
+            result_tree = ttk.Treeview(result_window)
+            result_tree["columns"] = (
+                'Payment id', 'Order id', 'Payment date', 'Payment price', 'Product id')
+            result_tree.heading('#0', text='№')
+            result_tree.heading('Payment id', text='Payment id')
+            result_tree.heading('Order id', text='Order id')
+            result_tree.heading('Payment date', text='Payment date')
+            result_tree.heading('Payment price', text='Payment price')
+            result_tree.heading('Product id', text='Product id')
+
+            # Устанавливаем размеры столбцов для таблицы результатов
+            result_tree.column("#0", width=40)
+            result_tree.column("Payment id", width=100, anchor=tk.CENTER)
+            result_tree.column("Order id", width=100, anchor=tk.CENTER)
+            result_tree.column("Payment date", width=100, anchor=tk.CENTER)
+            result_tree.column("Payment price", width=100, anchor=tk.CENTER)
+            result_tree.column("Product id", width=80, anchor=tk.CENTER)
+
+            cursor.execute("SELECT * FROM payment WHERE payment_date=%s", (selected_product_id,))
             rows = cursor.fetchall()
             for i, row in enumerate(rows):
                 result_tree.insert("", "end", text=str(i), values=row)
@@ -1439,7 +1545,7 @@ def payment():
             print(f"Error: {e}. Enter correct product id")
 
         def save_to_excel(selected_product_id):
-            cursor.execute("SELECT * FROM payment WHERE order_id=%s", (selected_product_id,))
+            cursor.execute("SELECT * FROM payment WHERE payment_date=%s", (selected_product_id,))
             rows = cursor.fetchall()
             wb = Workbook()
             ws = wb.active
@@ -1455,10 +1561,8 @@ def payment():
             print(f"The data has been successfully saved in the file {save_path} on the desktop.")
 
         # Создание кнопки "Save"
-        button_save = tk.Button(result_window, text='Save', width=10, height=1,
-                                    command=lambda: save_to_excel(selected_product_id))
+        button_save = tk.Button(result_window, text='Save', width=10, height=1,command=lambda: save_to_excel(selected_product_id))
         button_save.pack()
-
 
     def save_to_excel():
         try:
@@ -1662,6 +1766,10 @@ def payment():
         button_excel = tk.Button(button_frame_right, text="Save to excel", padx=5, pady=1, width=10, height=1, command=save_to_excel)
         button_excel.pack(side=tk.TOP)
 
+        button_sort = tk.Button(button_frame_right, bg="#C0C0C0", text="Sort by date", padx=5, pady=1, width=10, height=1,
+                                command=sort_by_date)
+        button_sort.pack(side=tk.TOP)
+
         button_frame_left = tk.Frame(root, background="#FFFFFF")
         button_frame_left.pack(side='right')
         # Add String
@@ -1674,45 +1782,43 @@ def payment():
         button_delete = tk.Button(button_frame_left, text="Delete String", padx=5, pady=1, width=10, height=1, command= confirm_action)
         button_delete.pack(side=tk.TOP)
 
-        button_sort = tk.Button(button_frame_left, bg="#C0C0C0", text="Sort", padx=5, pady=1, width=10, height=1, command=sort_by_id)
+        button_sort = tk.Button(button_frame_left, bg="#C0C0C0", text="Sort by id", padx=5, pady=1, width=10, height=1, command=sort_by_id)
         button_sort.pack(side=tk.TOP)
 
         frame_id4 = tk.Frame(root)
         frame_id4.pack(anchor="nw")
-        label_id4 = tk.Label(frame_id4, text="Enter payment id:", width=13, height=1, background="#FFFFFF", anchor='nw')
+        label_id4 = tk.Label(frame_id4, text="Enter payment id:", width=14, height=1, background="#FFFFFF", anchor='nw')
         label_id4.pack(side="left")
-        entry_id4 = tk.Entry(frame_id4, width=14)
+        entry_id4 = tk.Entry(frame_id4, width=24)
         entry_id4.pack(side="left")
 
         frame_id3 = tk.Frame(root)
         frame_id3.pack(anchor="nw")
-        label_id3 = tk.Label(frame_id3, text="Enter order id:", width=13, height=1, background="#FFFFFF", anchor='nw')
+        label_id3 = tk.Label(frame_id3, text="Enter order id:", width=14, height=1, background="#FFFFFF", anchor='nw')
         label_id3.pack(side="left")
-        entry_id3=tk.Entry(frame_id3, width=14)
+        entry_id3=tk.Entry(frame_id3, width=24)
         entry_id3.pack(side="left")
 
         frame_date1 = tk.Frame(root)
         frame_date1.pack(anchor="nw")
-        label_date1 = tk.Label(frame_date1, text="Enter date:", width=13, height=1, background="#FFFFFF", anchor='nw')
+        label_date1 = tk.Label(frame_date1, text="Enter date:", width=14, height=1, background="#FFFFFF", anchor='nw')
         label_date1.pack(side="left")
-        entry_date1 = tk.Entry(frame_date1, width=14)
+        entry_date1 = tk.Entry(frame_date1, width=24)
         entry_date1.pack(side="left")
-
-        # frame_price2 = tk.Frame(root)
-        # frame_price2.pack(anchor="nw")
-        # label_price2 = tk.Label(frame_price2, text="Enter price:", width=13, height=1, background="#FFFFFF", anchor='nw')
-        # label_price2.pack(side="left")
-        # entry_price2 = tk.Entry(frame_price2, width=14)
-        # entry_price2.pack(side="left")
 
         frame_sort = tk.Frame(root)
         frame_sort.pack(anchor="nw")
-        label_sort = tk.Label(frame_sort, text="Order id to find:", width=13, height=1, background="#C0C0C0",
-                              anchor='nw')
+        label_sort = tk.Label(frame_sort, text="Order id to find:", width=14, height=1, background="#C0C0C0",anchor='nw')
         label_sort.pack(side="left")
-        entry_sort = tk.Entry(frame_sort, width=14)
+        entry_sort = tk.Entry(frame_sort, width=24)
         entry_sort.pack(side="left")
 
+        frame_sort_date = tk.Frame(root)
+        frame_sort_date.pack(anchor="nw")
+        label_sort_date = tk.Label(frame_sort_date, text="Order date to find:", width=14, height=1, background="#C0C0C0",anchor='nw')
+        label_sort_date.pack(side="left")
+        entry_sort_date = tk.Entry(frame_sort_date, width=24)
+        entry_sort_date.pack(side="left")
 
     except Exception as e:
         print(f"Error loading data {e}")
@@ -1842,32 +1948,6 @@ def profit():
                 error_msg = f"Error deleting a string from the database {e}"
                 print(error_msg)
                 messagebox.showerror("Error when adding a string to the database", error_msg)
-
-        # def update_string():
-        #     id = int(entry_id.get())
-        #     profit = entry_profit.get()
-        #     if not id:
-        #         messagebox.showerror("Error", "Please enter the correct values for the order ID")
-        #         return
-        #
-        #     try:
-        #         cursor = conn.cursor()
-        #         cursor.execute(
-        #             "UPDATE profit SET profit = %s WHERE product_id = %s", (profit, id))
-        #         conn.commit()
-        #         # Обновляем поля после успешного обновления
-        #         clear_all_entrys()
-        #         insert()  # Может потребоваться обновить данные на экране
-        #
-        #     except ValueError:
-        #         messagebox.showerror("Error", "The product ID and the number must be integer values")
-        #     except Exception as e:
-        #         conn.rollback()
-        #         error_msg = f"Error updating data {e}"
-        #         print(error_msg)
-        #         messagebox.showerror("Error", error_msg)
-        #
-        #     return profit, id
 
         def on_double_click(event):
             selected_item = tree.selection()[0]  # Получаем ID выбранной строки
